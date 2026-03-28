@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'models/update_action.dart';
+import 'models/update_analytics.dart';
 import 'models/update_config.dart';
 import 'models/update_status.dart';
 import 'checkers/remote_config_checker.dart';
@@ -12,6 +14,7 @@ import 'utils/version_utils.dart';
 import 'ui/update_prompt_dialog.dart';
 import 'ui/force_update_wall.dart';
 import 'ui/maintenance_wall.dart';
+import 'ui/changelog_sheet.dart';
 
 /// The main entry point for app_update_pilot.
 ///
@@ -19,6 +22,25 @@ import 'ui/maintenance_wall.dart';
 /// displaying update prompts, force update walls, and maintenance screens.
 class AppUpdatePilot {
   AppUpdatePilot._();
+
+  static UpdateAnalytics? _analytics;
+
+  /// Configure global analytics callbacks.
+  ///
+  /// Call once at app start:
+  /// ```dart
+  /// AppUpdatePilot.configure(
+  ///   analytics: UpdateAnalytics(
+  ///     onPromptShown: (info) => tracker.track('update_shown', info),
+  ///     onUpdateAccepted: (info) => tracker.track('update_accepted', info),
+  ///   ),
+  /// );
+  /// ```
+  static void configure({
+    UpdateAnalytics? analytics,
+  }) {
+    _analytics = analytics;
+  }
 
   /// One-line check + auto-show appropriate UI.
   ///
@@ -41,26 +63,44 @@ class AppUpdatePilot {
     Widget Function(BuildContext, UpdateStatus)? forceUpdateBuilder,
     Widget Function(BuildContext, UpdateStatus)? promptBuilder,
     Widget Function(BuildContext, UpdateStatus)? maintenanceBuilder,
+    Widget Function(BuildContext)? footerBuilder,
+    Widget? icon,
+    String? title,
+    String? description,
+    String? updateButtonText,
+    String? skipButtonText,
+    String? remindButtonText,
   }) async {
     final status = await checkForUpdate(config: config);
 
     if (!context.mounted) return status;
 
     if (status.isMaintenanceMode) {
+      _analytics?.onMaintenanceShown?.call(status);
       showMaintenanceWall(
         context,
         status,
         customBuilder: maintenanceBuilder,
+        footerBuilder: footerBuilder,
+        icon: icon,
+        title: title,
+        message: description,
       );
       return status;
     }
 
     if (status.isForceUpdate) {
+      _analytics?.onForceUpdateShown?.call(status);
       showForceUpdateWall(
         context,
         status,
         onAction: onAction,
         customBuilder: forceUpdateBuilder,
+        footerBuilder: footerBuilder,
+        icon: icon,
+        title: title,
+        description: description,
+        updateButtonText: updateButtonText,
       );
       return status;
     }
@@ -83,6 +123,7 @@ class AppUpdatePilot {
       if (!context.mounted) return status;
 
       onAction?.call(UpdateAction.shown);
+      _analytics?.onPromptShown?.call(status);
 
       final result = await showUpdatePrompt(
         context,
@@ -92,13 +133,26 @@ class AppUpdatePilot {
         allowRemindLater: allowRemindLater,
         onAction: onAction,
         customBuilder: promptBuilder,
+        footerBuilder: footerBuilder,
+        icon: icon,
+        title: title,
+        description: description,
+        updateButtonText: updateButtonText,
+        skipButtonText: skipButtonText,
+        remindButtonText: remindButtonText,
       );
 
-      // Handle skip / remind-later persistence
-      if (result == UpdateAction.skipped && status.latestVersion != null) {
+      // Handle skip / remind-later persistence + analytics
+      if (result == UpdateAction.updated) {
+        _analytics?.onUpdateAccepted?.call(status);
+      } else if (result == UpdateAction.skipped && status.latestVersion != null) {
+        _analytics?.onUpdateSkipped?.call(status, status.latestVersion!);
         await SkipVersionManager.skipVersion(status.latestVersion!);
       } else if (result == UpdateAction.remindLater) {
+        _analytics?.onRemindLater?.call(status, remindLaterCooldown);
         await SkipVersionManager.setRemindLater();
+      } else if (result == UpdateAction.dismissed) {
+        _analytics?.onPromptDismissed?.call(status);
       }
     }
 
@@ -217,6 +271,11 @@ class AppUpdatePilot {
     UpdateStatus status, {
     UpdateActionCallback? onAction,
     Widget Function(BuildContext, UpdateStatus)? customBuilder,
+    Widget Function(BuildContext)? footerBuilder,
+    Widget? icon,
+    String? title,
+    String? description,
+    String? updateButtonText,
   }) {
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(
@@ -224,6 +283,11 @@ class AppUpdatePilot {
           status: status,
           onAction: onAction,
           customBuilder: customBuilder,
+          footerBuilder: footerBuilder,
+          icon: icon,
+          title: title,
+          description: description,
+          updateButtonText: updateButtonText,
         ),
       ),
       (_) => false,
@@ -235,12 +299,20 @@ class AppUpdatePilot {
     BuildContext context,
     UpdateStatus status, {
     Widget Function(BuildContext, UpdateStatus)? customBuilder,
+    Widget Function(BuildContext)? footerBuilder,
+    Widget? icon,
+    String? title,
+    String? message,
   }) {
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(
         builder: (_) => MaintenanceWall(
           status: status,
           customBuilder: customBuilder,
+          footerBuilder: footerBuilder,
+          icon: icon,
+          title: title,
+          message: message,
         ),
       ),
       (_) => false,
@@ -256,6 +328,13 @@ class AppUpdatePilot {
     bool allowRemindLater = true,
     UpdateActionCallback? onAction,
     Widget Function(BuildContext, UpdateStatus)? customBuilder,
+    Widget Function(BuildContext)? footerBuilder,
+    Widget? icon,
+    String? title,
+    String? description,
+    String? updateButtonText,
+    String? skipButtonText,
+    String? remindButtonText,
   }) {
     return showDialog<UpdateAction>(
       context: context,
@@ -267,12 +346,82 @@ class AppUpdatePilot {
         allowRemindLater: allowRemindLater,
         onAction: onAction,
         customBuilder: customBuilder,
+        footerBuilder: footerBuilder,
+        icon: icon,
+        title: title,
+        description: description,
+        updateButtonText: updateButtonText,
+        skipButtonText: skipButtonText,
+        remindButtonText: remindButtonText,
       ),
     );
+  }
+
+  /// Show a changelog bottom sheet.
+  ///
+  /// ```dart
+  /// AppUpdatePilot.showChangelog(
+  ///   context: context,
+  ///   changelog: '## What\'s New\n- Bug fixes',
+  ///   version: '2.1.0',
+  /// );
+  /// ```
+  static Future<void> showChangelog({
+    required BuildContext context,
+    required String changelog,
+    required String version,
+  }) {
+    return ChangelogSheet.show(context, changelog: changelog, version: version);
+  }
+
+  /// Open the app's store listing.
+  static Future<void> openStore(UpdateStatus status) async {
+    final url = status.storeUrl;
+    if (url != null) {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    }
+  }
+
+  /// Skip a specific version. The prompt won't show again for this version
+  /// until the [cooldown] expires.
+  static Future<void> skipVersion(
+    String version, {
+    Duration cooldown = const Duration(days: 7),
+  }) {
+    return SkipVersionManager.skipVersion(version);
+  }
+
+  /// Set a remind-later timer. The prompt won't show again until [delay]
+  /// has elapsed.
+  static Future<void> remindLater([
+    Duration delay = const Duration(hours: 24),
+  ]) {
+    return SkipVersionManager.setRemindLater();
+  }
+
+  /// Check whether a version was previously skipped and is still within
+  /// the cooldown window.
+  static Future<bool> isVersionSkipped(
+    String version, {
+    Duration cooldown = const Duration(days: 7),
+  }) {
+    return SkipVersionManager.isVersionSkipped(version, cooldown: cooldown);
+  }
+
+  /// Check whether the current device is in the rollout group for the
+  /// given [percentage] (0.0–1.0).
+  static Future<bool> isInRolloutGroup(double percentage) {
+    return RolloutUtils.isInRolloutGroup(percentage);
   }
 
   /// Clear all persisted skip/remind-later state.
   static Future<void> clearPersistedState() {
     return SkipVersionManager.clearAll();
   }
+
+  /// Access the configured analytics instance (if any).
+  static UpdateAnalytics? get analytics => _analytics;
 }

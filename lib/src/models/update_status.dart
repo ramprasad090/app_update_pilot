@@ -38,6 +38,7 @@ class UpdateStatus {
   /// Raw config that produced this status.
   final UpdateConfig config;
 
+  /// Creates an [UpdateStatus] with the given parameters.
   const UpdateStatus({
     required this.updateAvailable,
     required this.isForceUpdate,

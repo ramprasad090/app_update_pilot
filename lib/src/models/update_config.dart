@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
 
 /// How urgently the update should be presented to the user.
 enum UpdateUrgency {
@@ -56,6 +54,7 @@ class UpdateConfig {
   /// Custom headers for the remote config URL request.
   final Map<String, String>? remoteConfigHeaders;
 
+  /// Creates an [UpdateConfig] with the given parameters.
   const UpdateConfig({
     this.latestVersion,
     this.minVersion,
@@ -158,6 +157,7 @@ class UpdateConfig {
   /// Whether this config uses Firebase Remote Config.
   bool get isFirebase => remoteConfigUrl == '_firebase_remote_config_';
 
+  /// Creates a copy of this config with the given fields replaced.
   UpdateConfig copyWith({
     String? latestVersion,
     String? minVersion,
