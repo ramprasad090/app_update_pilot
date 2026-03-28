@@ -4,9 +4,9 @@ description: >-
   force update walls, A/B rollout, rich changelogs, skip with cooldown,
   analytics hooks, maintenance mode, and remote config from any JSON API.
 version: 0.1.0
-homepage: https://github.com/ramprasadsreerama/app_update_pilot
-repository: https://github.com/ramprasadsreerama/app_update_pilot
-issue_tracker: https://github.com/ramprasadsreerama/app_update_pilot/issues
+homepage: https://github.com/ramprasad090/app_update_pilot
+repository: https://github.com/ramprasad090/app_update_pilot
+issue_tracker: https://github.com/ramprasad090/app_update_pilot/issues
 topics:
   - update
   - in-app-update
