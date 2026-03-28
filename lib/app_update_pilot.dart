@@ -19,3 +19,4 @@ export 'src/ui/update_pilot_guard.dart';
 export 'src/utils/version_utils.dart';
 export 'src/utils/skip_version_manager.dart';
 export 'src/utils/rollout_utils.dart';
+export 'src/native/native_update_manager.dart';

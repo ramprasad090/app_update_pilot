@@ -10,7 +10,7 @@ The complete app update lifecycle manager for Flutter. One package to handle sto
 | Feature | app_update_pilot | upgrader | in_app_update |
 |---|:---:|:---:|:---:|
 | Store version check (Play Store / App Store) | ✅ | ✅ | ❌ |
-| Native Android in-app update | Planned | ❌ | ✅ |
+| Native Android in-app update | ✅ | ❌ | ✅ |
 | Force update wall | ✅ | ❌ | ❌ |
 | Remote config (any JSON API) | ✅ | ❌ | ❌ |
 | A/B rollout percentage | ✅ | ❌ | ❌ |
@@ -400,11 +400,70 @@ AppUpdatePilot.check(
 | `android_store_url` | `String?` | Auto | Override Android store URL |
 | `ios_store_url` | `String?` | Auto | Override iOS store URL |
 
+## Native In-App Updates (Android)
+
+On Android, you can download and install updates **without leaving the app** using Google's Play In-App Updates API.
+
+### Flexible Update (Background Download)
+
+User can keep using the app while the update downloads. Show a snackbar when ready.
+
+```dart
+final info = await AppUpdatePilot.checkNativeUpdate();
+
+if (info.isAvailable && info.flexibleAllowed) {
+  // Listen for progress
+  AppUpdatePilot.onNativeDownloadProgress = (progress) {
+    print('Download: ${(progress * 100).toInt()}%');
+  };
+
+  // Listen for completion
+  AppUpdatePilot.onNativeDownloadComplete = () {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Update ready!'),
+        action: SnackBarAction(
+          label: 'Restart',
+          onPressed: () => AppUpdatePilot.completeNativeUpdate(),
+        ),
+      ),
+    );
+  };
+
+  await AppUpdatePilot.startNativeUpdate(NativeUpdateType.flexible);
+}
+```
+
+### Immediate Update (Full-Screen)
+
+Blocks the app with a Play Store managed UI. App restarts automatically.
+
+```dart
+final info = await AppUpdatePilot.checkNativeUpdate();
+
+if (info.isAvailable && info.immediateAllowed) {
+  await AppUpdatePilot.startNativeUpdate(NativeUpdateType.immediate);
+}
+```
+
+### NativeUpdateInfo Fields
+
+| Field | Type | Description |
+|---|---|---|
+| `isAvailable` | `bool` | Whether a native update is available |
+| `isSupported` | `bool` | Whether the platform supports it (Android only) |
+| `flexibleAllowed` | `bool` | Whether flexible update is allowed |
+| `immediateAllowed` | `bool` | Whether immediate update is allowed |
+| `staleDays` | `int?` | Days since update was published |
+| `priority` | `int` | Priority 0-5 (set in Play Console) |
+
+> **Note:** Native in-app updates are Android only. On iOS, use `AppUpdatePilot.openStore()` to redirect to the App Store.
+
 ## Platform Setup
 
 ### Android
 
-No additional setup required. The package uses HTTP to check the Play Store for version info. `INTERNET` permission is included in the plugin manifest.
+No additional setup required. The package uses Google's Play In-App Updates API for native updates and HTTP for store version checking. `INTERNET` permission is included in the plugin manifest.
 
 Minimum SDK: 21 (Android 5.0)
 
@@ -430,6 +489,9 @@ Minimum deployment target: iOS 12.0
 | `AppUpdatePilot.remindLater()` | Set remind-later timer |
 | `AppUpdatePilot.isVersionSkipped()` | Check if version is skipped |
 | `AppUpdatePilot.isInRolloutGroup()` | Check rollout eligibility |
+| `AppUpdatePilot.checkNativeUpdate()` | Check for native in-app update (Android) |
+| `AppUpdatePilot.startNativeUpdate()` | Start native flexible/immediate update |
+| `AppUpdatePilot.completeNativeUpdate()` | Install flexible update and restart |
 | `AppUpdatePilot.clearPersistedState()` | Reset all skip/remind state |
 
 ### Widgets
@@ -453,6 +515,8 @@ Minimum deployment target: iOS 12.0
 | `UpdateAnalytics` | Structured analytics callbacks |
 | `UpdateUrgency` | Urgency enum (optional, recommended, critical) |
 | `BannerPosition` | Banner position enum (top, bottom) |
+| `NativeUpdateType` | Native update type enum (flexible, immediate) |
+| `NativeUpdateInfo` | Result of native update availability check |
 
 ## Example
 

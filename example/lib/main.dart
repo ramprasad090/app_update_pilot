@@ -196,6 +196,59 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  /// Demo: Native in-app update (Android only)
+  Future<void> _nativeInAppUpdate() async {
+    final messenger = ScaffoldMessenger.of(context);
+
+    final info = await AppUpdatePilot.checkNativeUpdate();
+
+    if (!info.isSupported) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Native in-app updates are Android only')),
+      );
+      return;
+    }
+
+    if (!info.isAvailable) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('No native update available from Play Store')),
+      );
+      return;
+    }
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          'Update found! Flexible: ${info.flexibleAllowed}, '
+          'Immediate: ${info.immediateAllowed}, '
+          'Stale: ${info.staleDays ?? "?"}d, '
+          'Priority: ${info.priority}',
+        ),
+      ),
+    );
+
+    if (info.flexibleAllowed) {
+      AppUpdatePilot.onNativeDownloadProgress = (progress) {
+        debugPrint('Download: ${(progress * 100).toInt()}%');
+      };
+      AppUpdatePilot.onNativeDownloadComplete = () {
+        messenger.showSnackBar(
+          SnackBar(
+            content: const Text('Update downloaded! Restart to install.'),
+            action: SnackBarAction(
+              label: 'Restart',
+              onPressed: () => AppUpdatePilot.completeNativeUpdate(),
+            ),
+            duration: const Duration(seconds: 10),
+          ),
+        );
+      };
+      await AppUpdatePilot.startNativeUpdate(NativeUpdateType.flexible);
+    } else if (info.immediateAllowed) {
+      await AppUpdatePilot.startNativeUpdate(NativeUpdateType.immediate);
+    }
+  }
+
   /// Demo: Manual check with full control
   Future<void> _manualCheck() async {
     final status = await AppUpdatePilot.checkForUpdate(
@@ -301,6 +354,12 @@ class _HomePageState extends State<HomePage> {
                 // Advanced
                 const _SectionHeader(title: 'Advanced', icon: Icons.tune_rounded),
                 const SizedBox(height: 12),
+                _DemoButton(
+                  onPressed: _nativeInAppUpdate,
+                  icon: Icons.system_update_alt_rounded,
+                  label: 'Native In-App Update',
+                  subtitle: 'Android Play Store in-app update',
+                ),
                 _DemoButton(
                   onPressed: _manualCheck,
                   icon: Icons.code_rounded,

@@ -3,6 +3,7 @@
 Initial release of `app_update_pilot`.
 
 ### Core Features
+- **Native Android in-app updates** — flexible (background download) and immediate (full-screen) modes using Google Play In-App Updates API. No need to leave the app.
 - **Store version checking** — automatic Play Store (HTML scraping) and App Store (iTunes Lookup API) detection.
 - **Remote config** — fetch update rules from any JSON API endpoint with custom headers.
 - **Firebase Remote Config** — ready-to-use `UpdateConfig.firebase()` factory.
@@ -42,4 +43,5 @@ Initial release of `app_update_pilot`.
 - `AppUpdatePilot.openStore()` — open platform store listing.
 - `AppUpdatePilot.skipVersion()` / `remindLater()` / `isVersionSkipped()` — programmatic skip/remind control.
 - `AppUpdatePilot.isInRolloutGroup()` — check rollout eligibility.
+- `AppUpdatePilot.checkNativeUpdate()` / `startNativeUpdate()` / `completeNativeUpdate()` — native Android in-app update flow.
 - `AppUpdatePilot.clearPersistedState()` — reset all skip/remind state.

@@ -15,6 +15,7 @@ import 'ui/update_prompt_dialog.dart';
 import 'ui/force_update_wall.dart';
 import 'ui/maintenance_wall.dart';
 import 'ui/changelog_sheet.dart';
+import 'native/native_update_manager.dart';
 
 /// The main entry point for app_update_pilot.
 ///
@@ -424,4 +425,53 @@ class AppUpdatePilot {
 
   /// Access the configured analytics instance (if any).
   static UpdateAnalytics? get analytics => _analytics;
+
+  // ── Native In-App Updates (Android only) ───────────────────────
+
+  /// Check if a native in-app update is available (Android only).
+  ///
+  /// On iOS this always returns [NativeUpdateInfo.isAvailable] = false.
+  ///
+  /// ```dart
+  /// final info = await AppUpdatePilot.checkNativeUpdate();
+  /// if (info.isAvailable && info.flexibleAllowed) {
+  ///   await AppUpdatePilot.startNativeUpdate(NativeUpdateType.flexible);
+  /// }
+  /// ```
+  static Future<NativeUpdateInfo> checkNativeUpdate() {
+    return NativeUpdateManager.checkUpdate();
+  }
+
+  /// Start a native in-app update (Android only).
+  ///
+  /// - [NativeUpdateType.flexible] — downloads in background, user keeps
+  ///   using the app. Call [completeNativeUpdate] when ready to install.
+  /// - [NativeUpdateType.immediate] — full-screen Play Store UI, app
+  ///   restarts automatically after install.
+  ///
+  /// Set [onNativeDownloadProgress] and [onNativeDownloadComplete] before
+  /// calling this with [NativeUpdateType.flexible].
+  ///
+  /// Throws on iOS — use [openStore] instead.
+  static Future<bool> startNativeUpdate(NativeUpdateType type) {
+    return NativeUpdateManager.startUpdate(type);
+  }
+
+  /// Complete a flexible native update — triggers app restart.
+  ///
+  /// Call this after the flexible download finishes (see
+  /// [onNativeDownloadComplete]).
+  static Future<bool> completeNativeUpdate() {
+    return NativeUpdateManager.completeUpdate();
+  }
+
+  /// Set a callback for native flexible download progress (0.0–1.0).
+  static set onNativeDownloadProgress(void Function(double)? callback) {
+    NativeUpdateManager.onDownloadProgress = callback;
+  }
+
+  /// Set a callback for when a native flexible download completes.
+  static set onNativeDownloadComplete(void Function()? callback) {
+    NativeUpdateManager.onDownloadComplete = callback;
+  }
 }
