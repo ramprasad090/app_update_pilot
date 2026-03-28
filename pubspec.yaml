@@ -1,0 +1,36 @@
+name: app_update_pilot
+description: The complete app update lifecycle manager for Flutter. Store version checks, force update walls, A/B rollout, rich changelogs, skip with cooldown, analytics hooks, and remote config from any JSON API.
+version: 0.1.0
+homepage: https://github.com/ramprasadsreerama/app_update_pilot
+repository: https://github.com/ramprasadsreerama/app_update_pilot
+issue_tracker: https://github.com/ramprasadsreerama/app_update_pilot/issues
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.10.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.1.0
+  package_info_plus: ^8.0.0
+  shared_preferences: ^2.2.0
+  url_launcher: ^6.2.0
+  flutter_markdown: ^0.7.1
+  in_app_update:
+    version: ^4.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  mocktail: ^1.0.0
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.appupdatepilot
+        pluginClass: AppUpdatePilotPlugin
+      ios:
+        pluginClass: AppUpdatePilotPlugin
