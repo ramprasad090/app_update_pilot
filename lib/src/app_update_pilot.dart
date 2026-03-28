@@ -163,7 +163,23 @@ class AppUpdatePilot {
   /// Check for an update without showing any UI.
   ///
   /// Returns an [UpdateStatus] describing the current state.
+  /// If the check fails, fires [UpdateAnalytics.onCheckFailed] and
+  /// returns an "up to date" status so the app can continue normally.
   static Future<UpdateStatus> checkForUpdate({
+    required UpdateConfig config,
+  }) async {
+    try {
+      return await _performCheck(config: config);
+    } catch (e) {
+      _analytics?.onCheckFailed?.call(e);
+      return UpdateStatus.upToDate(
+        currentVersion: '',
+        config: config,
+      );
+    }
+  }
+
+  static Future<UpdateStatus> _performCheck({
     required UpdateConfig config,
   }) async {
     final packageInfo = await PackageInfo.fromPlatform();
@@ -173,7 +189,7 @@ class AppUpdatePilot {
     // Resolve the config (fetch remote if needed)
     var resolvedConfig = config;
 
-    if (config.remoteConfigUrl != null && !config.isFirebase) {
+    if (config.remoteConfigUrl != null) {
       final remoteConfig = await RemoteConfigChecker.fetchConfig(
         config.remoteConfigUrl!,
         headers: config.remoteConfigHeaders,

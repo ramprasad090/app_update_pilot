@@ -111,14 +111,25 @@ class UpdateConfig {
     );
   }
 
-  /// Create config from Firebase Remote Config keys.
-  /// This is a convenience constructor that sets up the config to
-  /// read from Firebase Remote Config (requires firebase_remote_config).
-  factory UpdateConfig.firebase() {
-    return const UpdateConfig(
-      checkStore: false,
-      remoteConfigUrl: '_firebase_remote_config_',
-    );
+  /// Create config from a map of key-value pairs.
+  ///
+  /// Useful for integrating with Firebase Remote Config or any
+  /// other key-value config source:
+  /// ```dart
+  /// final remoteConfig = FirebaseRemoteConfig.instance;
+  /// await remoteConfig.fetchAndActivate();
+  /// AppUpdatePilot.check(
+  ///   context: context,
+  ///   config: UpdateConfig.fromMap({
+  ///     'latest_version': remoteConfig.getString('app_latest_version'),
+  ///     'min_version': remoteConfig.getString('app_min_version'),
+  ///     'changelog': remoteConfig.getString('app_changelog'),
+  ///     'maintenance_mode': remoteConfig.getBool('app_maintenance'),
+  ///   }),
+  /// );
+  /// ```
+  factory UpdateConfig.fromMap(Map<String, dynamic> map) {
+    return UpdateConfig.fromJson(map);
   }
 
   /// Parse a remote JSON response into an UpdateConfig.
@@ -154,8 +165,8 @@ class UpdateConfig {
     }
   }
 
-  /// Whether this config uses Firebase Remote Config.
-  bool get isFirebase => remoteConfigUrl == '_firebase_remote_config_';
+  /// Whether this config was created from a map (e.g. Firebase Remote Config).
+  bool get isFromMap => remoteConfigUrl == null && latestVersion != null;
 
   /// Creates a copy of this config with the given fields replaced.
   UpdateConfig copyWith({

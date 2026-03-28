@@ -21,6 +21,10 @@ class StoreVersionChecker {
   }
 
   /// Get store URL for the current platform.
+  ///
+  /// On Android, auto-generates a Play Store URL from the package name.
+  /// On iOS, auto-generates an App Store URL from the bundle ID.
+  /// Custom URLs override the defaults.
   static String? getStoreUrl({
     required String packageName,
     String? androidStoreUrl,
@@ -30,7 +34,8 @@ class StoreVersionChecker {
       return androidStoreUrl ??
           'https://play.google.com/store/apps/details?id=$packageName';
     } else if (Platform.isIOS) {
-      return iosStoreUrl;
+      return iosStoreUrl ??
+          'https://apps.apple.com/app/$packageName';
     }
     return null;
   }

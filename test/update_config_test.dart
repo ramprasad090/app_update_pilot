@@ -46,9 +46,13 @@ void main() {
       expect(config.remoteConfigUrl, 'https://api.example.com/version');
     });
 
-    test('firebase creates firebase config', () {
-      final config = UpdateConfig.firebase();
-      expect(config.isFirebase, true);
+    test('fromMap creates config from map', () {
+      final config = UpdateConfig.fromMap({
+        'latest_version': '2.0.0',
+        'min_version': '1.5.0',
+      });
+      expect(config.latestVersion, '2.0.0');
+      expect(config.minVersion, '1.5.0');
     });
 
     test('urgency parsing', () {

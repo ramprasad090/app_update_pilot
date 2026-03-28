@@ -31,7 +31,7 @@ The complete app update lifecycle manager for Flutter. One package to handle sto
 
 ```yaml
 dependencies:
-  app_update_pilot: ^0.1.0
+  app_update_pilot: ^1.0.0
 ```
 
 ### 2. One-line setup
@@ -97,12 +97,24 @@ AppUpdatePilot.check(
 
 ### Firebase Remote Config
 
+Use `UpdateConfig.fromMap()` with your Firebase Remote Config values:
+
 ```dart
+final remoteConfig = FirebaseRemoteConfig.instance;
+await remoteConfig.fetchAndActivate();
+
 AppUpdatePilot.check(
   context: context,
-  config: UpdateConfig.firebase(),
+  config: UpdateConfig.fromMap({
+    'latest_version': remoteConfig.getString('app_latest_version'),
+    'min_version': remoteConfig.getString('app_min_version'),
+    'changelog': remoteConfig.getString('app_changelog'),
+    'maintenance_mode': remoteConfig.getBool('app_maintenance'),
+  }),
 );
 ```
+
+> **Note:** This package does not depend on `firebase_remote_config`. Add it separately in your app.
 
 ### Direct Configuration
 

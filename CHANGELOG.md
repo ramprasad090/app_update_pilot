@@ -1,3 +1,24 @@
+## 1.0.0
+
+Stable release of `app_update_pilot`.
+
+### Breaking Changes
+- **Removed `UpdateConfig.firebase()`** — replaced with `UpdateConfig.fromMap()` which works with Firebase Remote Config, Supabase, or any key-value source without requiring a Firebase dependency.
+- **Removed `UpdateConfig.isFirebase`** — replaced with `isFromMap`.
+
+### New Features
+- **Native Android in-app updates** — flexible (background download) and immediate (full-screen) modes using Google Play In-App Updates API via platform channels.
+- **`UpdateConfig.fromMap()`** — create config from any `Map<String, dynamic>`, perfect for Firebase Remote Config, Supabase, or custom backends.
+- **Error resilience** — `checkForUpdate()` now catches all errors, fires `onCheckFailed` analytics callback, and returns safe "up to date" status so the app never crashes.
+- **iOS store URL auto-generation** — iOS now auto-generates App Store URLs from the bundle ID, matching Android's behavior.
+
+### Improvements
+- Full `///` doc comments on all public API members for pub.dev documentation score.
+- Comprehensive README with comparison table, usage examples, and API reference.
+- Example app with demos for every feature including native in-app updates.
+
+---
+
 ## 0.1.0
 
 Initial release of `app_update_pilot`.
