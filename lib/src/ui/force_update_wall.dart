@@ -221,9 +221,9 @@ class ForceUpdateWall extends StatelessWidget {
                     width: double.infinity,
                     height: 56,
                     child: FilledButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        await _openStore();
                         onAction?.call(UpdateAction.updated);
-                        _openStore();
                       },
                       style: FilledButton.styleFrom(
                         backgroundColor: colorScheme.error,
@@ -259,11 +259,12 @@ class ForceUpdateWall extends StatelessWidget {
 
   Future<void> _openStore() async {
     final url = status.storeUrl;
-    if (url != null) {
-      final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
+    if (url == null) return;
+    final uri = Uri.parse(url);
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      // Ignore if the store cannot be opened (e.g. no store app installed).
     }
   }
 }

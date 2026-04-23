@@ -283,6 +283,10 @@ class AppUpdatePilot {
   }
 
   /// Show the force update wall (blocks the app).
+  ///
+  /// Uses the root navigator so it renders above any in-progress navigation
+  /// (e.g. a splash screen transitioning to main). Passes [clearStack] as
+  /// `true` (default) to wipe the back-stack so the user cannot go back.
   static void showForceUpdateWall(
     BuildContext context,
     UpdateStatus status, {
@@ -293,25 +297,32 @@ class AppUpdatePilot {
     String? title,
     String? description,
     String? updateButtonText,
+    bool clearStack = true,
   }) {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (_) => ForceUpdateWall(
-          status: status,
-          onAction: onAction,
-          customBuilder: customBuilder,
-          footerBuilder: footerBuilder,
-          icon: icon,
-          title: title,
-          description: description,
-          updateButtonText: updateButtonText,
-        ),
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final route = MaterialPageRoute<void>(
+      builder: (_) => ForceUpdateWall(
+        status: status,
+        onAction: onAction,
+        customBuilder: customBuilder,
+        footerBuilder: footerBuilder,
+        icon: icon,
+        title: title,
+        description: description,
+        updateButtonText: updateButtonText,
       ),
-      (_) => false,
     );
+    if (clearStack) {
+      navigator.pushAndRemoveUntil(route, (_) => false);
+    } else {
+      navigator.push(route);
+    }
   }
 
   /// Show the maintenance wall (blocks the app).
+  ///
+  /// Uses the root navigator so it renders above any in-progress navigation.
+  /// Passes [clearStack] as `true` (default) to wipe the back-stack.
   static void showMaintenanceWall(
     BuildContext context,
     UpdateStatus status, {
@@ -320,23 +331,30 @@ class AppUpdatePilot {
     Widget? icon,
     String? title,
     String? message,
+    bool clearStack = true,
   }) {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (_) => MaintenanceWall(
-          status: status,
-          customBuilder: customBuilder,
-          footerBuilder: footerBuilder,
-          icon: icon,
-          title: title,
-          message: message,
-        ),
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final route = MaterialPageRoute<void>(
+      builder: (_) => MaintenanceWall(
+        status: status,
+        customBuilder: customBuilder,
+        footerBuilder: footerBuilder,
+        icon: icon,
+        title: title,
+        message: message,
       ),
-      (_) => false,
     );
+    if (clearStack) {
+      navigator.pushAndRemoveUntil(route, (_) => false);
+    } else {
+      navigator.push(route);
+    }
   }
 
   /// Show the update prompt dialog. Returns the user's action.
+  ///
+  /// Uses the root navigator so the dialog renders on top regardless of which
+  /// screen called it (e.g. a splash screen mid-navigation).
   static Future<UpdateAction?> showUpdatePrompt(
     BuildContext context,
     UpdateStatus status, {
@@ -355,6 +373,7 @@ class AppUpdatePilot {
   }) {
     return showDialog<UpdateAction>(
       context: context,
+      useRootNavigator: true,
       barrierDismissible: false,
       builder: (_) => UpdatePromptDialog(
         status: status,

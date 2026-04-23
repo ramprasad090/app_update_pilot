@@ -1,3 +1,12 @@
+## 1.0.1
+
+### Bug Fixes
+- **"Update Now" button** — fixed silent failure when using `UpdateConfig.fromUrl()`. The button now calls `launchUrl` directly (no longer gated behind `canLaunchUrl`, which silently returns false on Android if the `https` scheme isn't declared in `<queries>`). Store opens before the dialog dismisses.
+- **Root navigator usage** — `showForceUpdateWall`, `showMaintenanceWall`, and `showUpdatePrompt` now use `rootNavigator: true`. This prevents the force/maintenance wall from being popped or dismissed when called from a splash screen that navigates away while the async update check is in flight.
+- **`clearStack` option** — `showForceUpdateWall` and `showMaintenanceWall` accept an optional `clearStack` parameter (default `true`) for cases where clearing the route stack is not desired.
+
+---
+
 ## 1.0.0
 
 Stable release of `app_update_pilot`.

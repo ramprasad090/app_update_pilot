@@ -238,10 +238,13 @@ class UpdatePromptDialog extends StatelessWidget {
                     width: double.infinity,
                     height: 50,
                     child: FilledButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        await _openStore();
                         onAction?.call(UpdateAction.updated);
-                        Navigator.of(context).pop(UpdateAction.updated);
-                        _openStore();
+                        if (context.mounted) {
+                          Navigator.of(context, rootNavigator: true)
+                              .pop(UpdateAction.updated);
+                        }
                       },
                       style: FilledButton.styleFrom(
                         shape: RoundedRectangleBorder(
@@ -307,11 +310,12 @@ class UpdatePromptDialog extends StatelessWidget {
 
   Future<void> _openStore() async {
     final url = status.storeUrl;
-    if (url != null) {
-      final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
+    if (url == null) return;
+    final uri = Uri.parse(url);
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      // Ignore if the store cannot be opened (e.g. no store app installed).
     }
   }
 }
