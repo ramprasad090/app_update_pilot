@@ -260,11 +260,25 @@ class ForceUpdateWall extends StatelessWidget {
   Future<void> _openStore() async {
     final url = status.storeUrl;
     if (url == null) return;
+    // market:// opens Play Store app directly. Fall back to https:// if the
+    // Play Store app is not present (e.g. emulator, alternative stores).
     final uri = Uri.parse(url);
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
-      // Ignore if the store cannot be opened (e.g. no store app installed).
+      if (url.startsWith('market://')) {
+        final packageId = uri.queryParameters['id'];
+        if (packageId != null) {
+          try {
+            await launchUrl(
+              Uri.parse(
+                'https://play.google.com/store/apps/details?id=$packageId',
+              ),
+              mode: LaunchMode.externalApplication,
+            );
+          } catch (_) {}
+        }
+      }
     }
   }
 }

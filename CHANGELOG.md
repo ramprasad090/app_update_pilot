@@ -1,3 +1,11 @@
+## 1.0.2
+
+### Bug Fixes
+- **"Update Now" does nothing on Android** — store URL now uses `market://` scheme which opens the Play Store app directly instead of a browser. Falls back to `https://play.google.com/...` if Play Store is not installed.
+- **Android 11+ intent visibility** — added `<queries>` block to the plugin's `AndroidManifest.xml` declaring `market://` and `https://play.google.com` intent filters. Without this, `launchUrl` silently fails on Android 11+ due to package visibility restrictions.
+
+---
+
 ## 1.0.1
 
 ### Bug Fixes

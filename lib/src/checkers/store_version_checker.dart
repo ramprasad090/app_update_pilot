@@ -31,8 +31,10 @@ class StoreVersionChecker {
     String? iosStoreUrl,
   }) {
     if (Platform.isAndroid) {
+      // Use market:// so the Play Store app opens directly.
+      // Custom URL overrides this (e.g. for Samsung Galaxy Store).
       return androidStoreUrl ??
-          'https://play.google.com/store/apps/details?id=$packageName';
+          'market://details?id=$packageName';
     } else if (Platform.isIOS) {
       return iosStoreUrl ??
           'https://apps.apple.com/app/$packageName';

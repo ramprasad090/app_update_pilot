@@ -1,4 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.appupdatepilot">
     <uses-permission android:name="android.permission.INTERNET" />
+    <queries>
+        <!-- Required for launchUrl with market:// (Play Store) on Android 11+ -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="market" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" android:host="play.google.com" />
+        </intent>
+    </queries>
 </manifest>
