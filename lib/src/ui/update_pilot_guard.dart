@@ -90,7 +90,11 @@ class _UpdatePilotGuardState extends State<UpdatePilotGuard> {
   void initState() {
     super.initState();
     if (widget.enabled) {
-      _performCheck();
+      // Defer until the first frame so the widget is fully settled in the
+      // navigator before we show any dialogs or push any routes.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _performCheck();
+      });
     }
   }
 

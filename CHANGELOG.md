@@ -1,15 +1,8 @@
-## 1.0.5
+## 1.0.6
 
 ### Bug Fixes
-- **Dialog appears over wrong screen** — when `check()` is called in `main` screen's `initState` with `UpdateConfig.fromStore()`, the Play Store scrape takes a few seconds. If the user navigates to another screen during that time, the dialog was popping up on top of the new screen. Fixed by capturing the calling route before the async gap and skipping UI if that route is no longer current when the check completes.
-
----
-
-## 1.0.4
-
-### Bug Fixes
-- **Force update "Update Now" does nothing** — fixed `_openStore` in `ForceUpdateWall` and `UpdatePromptDialog` to properly iterate `market://` then `https://` fallback, checking the `bool` return value of `launchUrl` (it returns `false` on failure, does not throw).
-- **`critical` urgency via `fromUrl` config** — force update wall now correctly opens the store when triggered by `urgency: critical` from a remote JSON config.
+- **Dialog disappears / new screen comes through** — when `check()` is called in a screen that also navigates away (e.g. `pushReplacement`, `pushAndRemoveUntil`), the dialog was dismissed by the in-flight navigation. Fixed by yielding to the event loop after `checkForUpdate` completes so any pending navigation settles before the dialog is pushed onto the root navigator.
+- **`UpdatePilotGuard` timing** — deferred `_performCheck()` to `addPostFrameCallback` so the widget is fully settled in the navigator tree before showing any UI.
 
 ---
 
