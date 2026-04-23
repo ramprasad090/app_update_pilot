@@ -72,9 +72,18 @@ class AppUpdatePilot {
     String? skipButtonText,
     String? remindButtonText,
   }) async {
+    // Capture the route before any async gap. If the caller's screen is no
+    // longer the active route when the check completes (e.g. the user navigated
+    // away during the Play Store scrape), we skip showing any UI.
+    final route = ModalRoute.of(context);
+
     final status = await checkForUpdate(config: config);
 
     if (!context.mounted) return status;
+
+    // If the screen that called check() is no longer on top, don't pop up
+    // dialogs or walls over whatever screen the user navigated to.
+    if (route != null && !route.isCurrent) return status;
 
     if (status.isMaintenanceMode) {
       _analytics?.onMaintenanceShown?.call(status);

@@ -1,16 +1,15 @@
+## 1.0.5
+
+### Bug Fixes
+- **Dialog appears over wrong screen** — when `check()` is called in `main` screen's `initState` with `UpdateConfig.fromStore()`, the Play Store scrape takes a few seconds. If the user navigates to another screen during that time, the dialog was popping up on top of the new screen. Fixed by capturing the calling route before the async gap and skipping UI if that route is no longer current when the check completes.
+
+---
+
 ## 1.0.4
 
 ### Bug Fixes
 - **Force update "Update Now" does nothing** — fixed `_openStore` in `ForceUpdateWall` and `UpdatePromptDialog` to properly iterate `market://` then `https://` fallback, checking the `bool` return value of `launchUrl` (it returns `false` on failure, does not throw).
 - **`critical` urgency via `fromUrl` config** — force update wall now correctly opens the store when triggered by `urgency: critical` from a remote JSON config.
-
----
-
-## 1.0.3
-
-### Bug Fixes
-- **"Update Now" still doing nothing** — `launchUrl` returns `false` on failure instead of throwing, so the previous `try/catch` fallback never triggered. Now checks the return value and falls back to `https://play.google.com/...` if `market://` returns false.
-- **Simplified URL handling** — `_openStore` now cleanly extracts the package ID from any URL scheme and always tries `market://` first, then `https://` fallback, regardless of which scheme `storeUrl` was set to.
 
 ---
 
