@@ -1,3 +1,19 @@
+## 1.0.4
+
+### Bug Fixes
+- **Force update "Update Now" does nothing** — fixed `_openStore` in `ForceUpdateWall` and `UpdatePromptDialog` to properly iterate `market://` then `https://` fallback, checking the `bool` return value of `launchUrl` (it returns `false` on failure, does not throw).
+- **`critical` urgency via `fromUrl` config** — force update wall now correctly opens the store when triggered by `urgency: critical` from a remote JSON config.
+
+---
+
+## 1.0.3
+
+### Bug Fixes
+- **"Update Now" still doing nothing** — `launchUrl` returns `false` on failure instead of throwing, so the previous `try/catch` fallback never triggered. Now checks the return value and falls back to `https://play.google.com/...` if `market://` returns false.
+- **Simplified URL handling** — `_openStore` now cleanly extracts the package ID from any URL scheme and always tries `market://` first, then `https://` fallback, regardless of which scheme `storeUrl` was set to.
+
+---
+
 ## 1.0.2
 
 ### Bug Fixes
